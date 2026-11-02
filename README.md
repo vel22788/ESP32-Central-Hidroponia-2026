@@ -2,24 +2,12 @@
 
 **Año:** 2026 · **Autor:** Ángel Velásquez · **Universidad del Valle de Guatemala**  
 **Curso:** Diseño e Innovación en Ingeniería  
-**Firmware:** `CENTRAL_FINAL_20261101_R4` · edición documentada del 2 de noviembre de 2026.
+**Firmware:** `CENTRAL_FINAL_20261101_R4`
 
 Este repositorio contiene el programa del controlador central ESP32-S3 de una
 plataforma hidropónica automatizada. Integra adquisición de pH, conductividad,
 PT1000 y ambiente, reloj DS3231, motores con finales de carrera, relés,
 flotadores, riego y comunicación con la pantalla HMI.
-
-## Estado de la revisión
-
-Se entrega **R4 con configuración centralizada en un header y comentarios dentro
-del código**. Esta revisión está compilada, pero no tiene una nueva carga física
-documentada. La última carga documentada del central sigue siendo R3, con HMI
-`FinalConEventos`. No se presenta la compilación como validación física completa.
-
-La documentación añadida preserva las instrucciones, constantes, formatos y
-mensajes de R4. La comparación léxica con el código limpio confirmó cambios
-solo en comentarios/espacios. Las bibliotecas de terceros conservan su contenido.
-
 ## Estructura
 
 ```text
@@ -128,8 +116,7 @@ GND común. La HMI compatible y el puente USB no forman parte de este repositori
   corta alimentación del driver, cuyo EN permanece conectado a GND.
 - Historial/curvas/umbral son RAM; la agenda tiene su espacio NVS con CRC.
 - La edición documentada compila con ESP32 3.3.10: **462 720 bytes de programa**
-  y **45 136 bytes globales**. El paquete previo de R4 documenta 270 comprobaciones
-  funcionales en PC; no se atribuye a este repositorio un ensayo físico nuevo.
+  y **45 136 bytes globales**. 
 
 ## Procedencia y licencias
 
@@ -140,11 +127,4 @@ bibliotecas de terceros mantienen sus avisos y licencias en sus carpetas:
 - [`Adafruit ADS1X15`](librerias/Adafruit_ADS1X15/license.txt).
 - [`Adafruit BusIO`](librerias/Adafruit_BusIO/LICENSE).
 
-## Entrega académica
 
-El repositorio proporciona el código organizado y comentado con instrucciones
-de uso y dependencias. Para identificar esta entrega se utiliza la etiqueta
-`entrega-2026-11-02-r4-documentado`. La copia completa del código también debe
-colocarse en la carpeta correspondiente de OneDrive; un enlace a GitHub no la
-sustituye. No se incluyen CAD, documentos personales, calibraciones extraídas,
-cachés, pruebas históricas, binarios ni contenido de la bóveda.
