@@ -1,0 +1,24 @@
+# Salidas de Arduino y compiladores
+build/
+out/
+dist/
+*.o
+*.a
+*.elf
+*.map
+*.bin
+*.hex
+*.d
+*.log
+# Temporales y cachés
+tmp/
+.cache/
+__pycache__/
+*.pyc
+*.tmp
+*.bak
+# Archivos locales del editor/sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
