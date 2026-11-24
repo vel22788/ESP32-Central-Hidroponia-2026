@@ -1,21 +1,12 @@
-/**
- * @file ModeloPH.h
- * Modelo lineal de pH de dos puntos para la cadena completa de medición.
- * Entradas en mV, salida de pH sin unidades; sin compensación térmica automática.
- * Exige dos puntos válidos con pendiente negativa y separación respecto al ruido.
- * Esas verificaciones son controles numéricos, no una garantía de exactitud.
- * El módulo 01 lee el registro ya guardado; este header no escribe la memoria.
- */
 #pragma once
 #include <cmath>
 #include "Configuracion.h"
 #include <cstddef>
 #include <cstdint>
 
-// Ajuste de la cadena completa en mV. Sin valores de pH predeterminados ni ATC.
 namespace ModeloPH {
 constexpr uint32_t MAGIC = 0x50484331, VERSION = 1;
-constexpr float MAX_MV = Configuracion::ADC_ALIMENTACION_V*1000.0f;  // Riel documentado del ADS1115, no rango PGA.
+constexpr float MAX_MV = Configuracion::ADC_ALIMENTACION_V * 1000.0f;
 
 struct Punto {
   float ph = 0, mv = 0, dispersionMv = 0;
@@ -29,6 +20,7 @@ struct Registro {
 };
 static_assert(sizeof(Registro) == 36, "Formato NVS pH incompatible");
 
+// Calcula el CRC32 que protege los datos de calibración de pH.
 inline uint32_t crc32(const void *datos, size_t n) {
   const auto *p = static_cast<const uint8_t *>(datos);
   uint32_t crc = 0xFFFFFFFFu;
@@ -40,53 +32,62 @@ inline uint32_t crc32(const void *datos, size_t n) {
   return ~crc;
 }
 
+// Comprueba que un patrón tenga pH, tensión y dispersión dentro de los límites admitidos.
 inline bool puntoValido(const Punto &p) {
-  return std::isfinite(p.ph) && p.ph >= 0 && p.ph <= 14 &&
-         std::isfinite(p.mv) && p.mv > 0 && p.mv < MAX_MV &&
-         std::isfinite(p.dispersionMv) && p.dispersionMv >= 0 &&
-         p.dispersionMv < MAX_MV;
+  return std::isfinite(p.ph) && p.ph >= 0 && p.ph <= 14 && std::isfinite(p.mv) && p.mv > 0 && p.mv < MAX_MV &&
+         std::isfinite(p.dispersionMv) && p.dispersionMv >= 0 && p.dispersionMv < MAX_MV;
 }
 
-/**
- * Exige puntos separados y pendiente negativa respecto de mV. La separación
- * frente a dispersión evita construir una recta numéricamente mal condicionada.
- */
+// Verifica que ambos patrones estén suficientemente separados y formen una recta de pendiente negativa.
 inline bool parValido(const Punto &a, const Punto &b) {
-  if (!puntoValido(a) || !puntoValido(b)) return false;
-  // Controles numericos del calibrador; no tolerancias de exactitud del sensor.
+  if (!puntoValido(a) || !puntoValido(b))
+    return false;
+
   const float dp = b.ph - a.ph, dv = b.mv - a.mv;
   const float ruido = a.dispersionMv > b.dispersionMv ? a.dispersionMv : b.dispersionMv;
-  return std::fabs(dp) >= 1.0f && std::fabs(dv) > 1.0f &&
-         std::fabs(dv) > 4.0f * ruido && dp * dv < 0;
+  return std::fabs(dp) >= 1.0f && std::fabs(dv) > 1.0f && std::fabs(dv) > 4.0f * ruido && dp * dv < 0;
 }
 
+// Construye y sella el registro formal de pH a partir de dos patrones válidos.
 inline bool preparar(const Punto &a, const Punto &b, Registro &r) {
-  if (!parValido(a, b)) return false;
+  if (!parValido(a, b))
+    return false;
   r = Registro{};
-  r.ph1 = a.ph; r.mv1 = a.mv; r.ph2 = b.ph; r.mv2 = b.mv;
-  r.dispersion1Mv = a.dispersionMv; r.dispersion2Mv = b.dispersionMv;
+  r.ph1 = a.ph;
+  r.mv1 = a.mv;
+  r.ph2 = b.ph;
+  r.mv2 = b.mv;
+  r.dispersion1Mv = a.dispersionMv;
+  r.dispersion2Mv = b.dispersionMv;
   r.crc = crc32(&r, offsetof(Registro, crc));
   return true;
 }
 
+// Verifica la identidad del registro, su CRC y la validez de los dos puntos guardados.
 inline bool valido(const Registro &r) {
-  return r.magic == MAGIC && r.version == VERSION &&
-         r.crc == crc32(&r, offsetof(Registro, crc)) &&
+  return r.magic == MAGIC && r.version == VERSION && r.crc == crc32(&r, offsetof(Registro, crc)) &&
          parValido({r.ph1, r.mv1, r.dispersion1Mv}, {r.ph2, r.mv2, r.dispersion2Mv});
 }
 
-inline float pendiente(const Registro &r) { return (r.ph2 - r.ph1) / (r.mv2 - r.mv1); }
-inline float intercepto(const Registro &r) { return r.ph1 - pendiente(r) * r.mv1; }
-/**
- * Interpola/extrapola la recta de calibración válida. Devuelve NAN ante
- * registro/señal inválidos o pH fuera de 0..14; no impone un pH predeterminado.
- * extrapola() informa si los mV están fuera del intervalo entre patrones.
- */
+// Calcula la pendiente de la recta de calibración en unidades de pH por milivoltio.
+inline float pendiente(const Registro &r) {
+  return (r.ph2 - r.ph1) / (r.mv2 - r.mv1);
+}
+
+// Calcula la ordenada al origen de la recta definida por los patrones.
+inline float intercepto(const Registro &r) {
+  return r.ph1 - pendiente(r) * r.mv1;
+}
+
+// Convierte milivoltios a pH usando los dos puntos y devuelve NaN si el registro o el resultado es inválido.
 inline float leer(float mv, const Registro &r) {
-  if (!valido(r) || !std::isfinite(mv) || mv <= 0 || mv >= MAX_MV) return NAN;
+  if (!valido(r) || !std::isfinite(mv) || mv <= 0 || mv >= MAX_MV)
+    return NAN;
   const float ph = r.ph1 + (mv - r.mv1) * pendiente(r);
   return std::isfinite(ph) && ph >= 0 && ph <= 14 ? ph : NAN;
 }
+
+// Indica si el voltaje medido queda fuera del tramo entre los dos patrones.
 inline bool extrapola(float mv, const Registro &r) {
   const float minimo = r.mv1 < r.mv2 ? r.mv1 : r.mv2;
   const float maximo = r.mv1 > r.mv2 ? r.mv1 : r.mv2;

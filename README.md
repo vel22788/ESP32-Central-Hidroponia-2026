@@ -2,7 +2,7 @@
 
 **Año:** 2026 · **Autor:** Ángel Velásquez · **Universidad del Valle de Guatemala**  
 **Curso:** Diseño e Innovación en Ingeniería  
-**Firmware:** `CENTRAL_FINAL_20261101_R4`
+**Firmware:** Programa Final comentado (`CENTRAL_HIDROPONICO`)
 
 Este repositorio contiene el programa del controlador central ESP32-S3 de una
 plataforma hidropónica automatizada. Integra adquisición de pH, conductividad,
@@ -115,8 +115,8 @@ GND común. La HMI compatible y el puente USB no forman parte de este repositori
 - Los finales y la lógica de proceso autorizan/paran maniobras; detener STEP no
   corta alimentación del driver, cuyo EN permanece conectado a GND.
 - Historial/curvas/umbral son RAM; la agenda tiene su espacio NVS con CRC.
-- La edición documentada compila con ESP32 3.3.10: **462 720 bytes de programa**
-  y **45 136 bytes globales**. 
+- La edición documentada compila con ESP32 3.3.10: **463 108 bytes de programa**
+  y **45 136 bytes globales**.
 
 ## Procedencia y licencias
 
