@@ -2,7 +2,7 @@
 
 **Año:** 2026 · **Autor:** Ángel Velásquez · **Universidad del Valle de Guatemala**  
 **Curso:** Diseño e Innovación en Ingeniería  
-**Firmware:** Programa Final comentado (`CENTRAL_HIDROPONICO`)
+**Firmware:** Central V2
 
 Este repositorio contiene el programa del controlador central ESP32-S3 de una
 plataforma hidropónica automatizada. Integra adquisición de pH, conductividad,
